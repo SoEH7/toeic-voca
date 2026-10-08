@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TOEIC 퀴즈 스마트 학습장</title>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --bg: #f3f4f6;
+            --card-bg: #ffffff;
+            --text-main: #1f2937;
+            --text-sub: #6b7280;
+            --correct: #10b981;
+            --wrong: #ef4444;
+            --border: #e5e7eb;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text-main);
+            padding: 16px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            color: #111827;
+            margin-bottom: 4px;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 6px;
+            justify-content: center;
+            margin-bottom: 16px;
+            background: #fff;
+            padding: 6px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 12px 8px;
+            border: none;
+            border-radius: 8px;
+            background: transparent;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--text-sub);
+            cursor: pointer;
+            transition: all 0.2s;
+            word-break: keep-all;
+        }
+
+        .tab-btn.active {
+            background-color: var(--primary);
+            color: #fff;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .btn-secondary {
+            padding: 8px 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: #fff;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+        }
+
+        .btn-secondary:hover {
+            background: #f9fafb;
+        }
+
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        /* 1. 플래시카드 */
+        .card-container {
+            perspective: 1000px;
+            min-height: 260px;
+            margin-bottom: 15px;
+        }
+
+        .flip-card {
+            width: 100%;
+            height: 280px;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.4s ease;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .flip-card.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            background: var(--card-bg);
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .card-back {
+            transform: rotateY(180deg);
+            background: #faf5ff;
+            border-color: #e9d5ff;
+        }
+
+        .word-main {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 10px;
+            word-break: break-word;
+        }
+
+        .word-meaning {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #0369a1;
+            margin-bottom: 10px;
+            word-break: keep-all;
+        }
+
+        .related-info {
+            font-size: 0.85rem;
+            color: var(--text-sub);
+            white-space: pre-line;
+            margin-bottom: 10px;
+        }
+
+        .example-box {
+            font-size: 0.9rem;
+            background: rgba(255,255,255,0.8);
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px dashed var(--border);
+            max-width: 100%;
+        }
+
+        .card-nav {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* 2. 퀴즈 */
+        .quiz-box {
+            background: #fff;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border);
+        }
+
+        .quiz-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 14px;
+            font-size: 0.85rem;
+            color: var(--text-sub);
+            font-weight: 600;
+        }
+
+        .quiz-question {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 18px;
+            text-align: center;
+            word-break: keep-all;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+
+        .option-btn {
+            padding: 14px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: #fff;
+            text-align: left;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            word-break: keep-all;
+        }
+
+        .option-btn.correct {
+            background: #d1fae5 !important;
+            border-color: var(--correct) !important;
+            color: #065f46;
+        }
+
+        .option-btn.wrong {
+            background: #fee2e2 !important;
+            border-color: var(--wrong) !important;
+            color: #991b1b;
+        }
+
+        .subjective-input-group {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .input-text {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            outline: none;
+            width: 100%;
+        }
+
+        .input-text:focus {
+            border-color: var(--primary);
+        }
+
+        .feedback-msg {
+            margin-top: 10px;
+            font-weight: 700;
+            text-align: center;
+            min-height: 24px;
+        }
+
+        .score-board {
+            text-align: center;
+            padding: 20px 10px;
+        }
+
+        .score-num {
+            font-size: 2.8rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin: 10px 0;
+        }
+
+        @media (max-width: 600px) {
+            body { padding: 10px; }
+            .word-main { font-size: 1.7rem; }
+            .word-meaning { font-size: 1.25rem; }
+            .tab-btn { font-size: 0.8rem; padding: 10px 4px; }
+            .flip-card { height: 260px; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>TOEIC 퀴즈 스마트 학습장</h1>
+    </header>
+
+    <div class="nav-tabs">
+        <button class="tab-btn active" onclick="switchTab('study')">플래시카드</button>
+        <button class="tab-btn" onclick="switchTab('mcq')">객관식 퀴즈</button>
+        <button class="tab-btn" onclick="switchTab('subjective')">주관식 테스트</button>
+    </div>
+
+    <div class="controls">
+        <span id="total-count-label" style="font-size: 0.85rem; color: var(--text-sub);">총 100단어</span>
+        <button class="btn-secondary" onclick="shuffleCurrentData()">🎲 순서 랜덤 섞기</button>
+    </div>
+
+    <!-- 1. 플래시 카드 -->
+    <section id="sec-study" class="section active">
+        <div class="card-container">
+            <div class="flip-card" id="flipCard" onclick="toggleCardFlip()">
+                <div class="card-front">
+                    <div class="word-main" id="card-en">advantage</div>
+                    <div class="related-info" id="card-rel">advantageous a. 유리한, 이로운</div>
+                    <div style="font-size:0.75rem; color:#9ca3af; margin-top:12px;">(카드를 터치하면 뜻을 확인합니다)</div>
+                </div>
+                <div class="card-back">
+                    <div class="word-meaning" id="card-ko">유리한 점, 이점</div>
+                    <div class="example-box">
+                        <div style="font-weight:700;" id="card-ex-en">take advantage of</div>
+                        <div style="color:var(--text-sub);" id="card-ex-ko">~을 활용하다</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-nav">
+            <button class="btn-secondary" onclick="moveCard(-1)">◀ 이전</button>
+            <span id="card-progress" style="font-weight: 600; font-size: 0.9rem;">1 / 80</span>
+            <button class="btn-secondary" onclick="moveCard(1)">다음 ▶</button>
+        </div>
+    </section>
+
+    <!-- 2. 객관식 퀴즈 -->
+    <section id="sec-mcq" class="section">
+        <div class="quiz-box" id="mcq-box">
+            <div class="quiz-header">
+                <span>객관식 테스트</span>
+                <span id="mcq-progress">1 / 80</span>
+            </div>
+            <div class="quiz-question" id="mcq-question">advantage</div>
+            <div class="options-grid" id="mcq-options"></div>
+        </div>
+    </section>
+
+    <!-- 3. 주관식 테스트 -->
+    <section id="sec-subjective" class="section">
+        <div class="quiz-box" id="subj-box">
+            <div class="quiz-header">
+                <span>주관식 테스트 (영어 입력)</span>
+                <span id="subj-progress">1 / 80</span>
+            </div>
+            <div class="quiz-question" id="subj-question" style="color: #0369a1;">유리한 점, 이점</div>
+            <div class="related-info" id="subj-hint" style="text-align: center; margin-bottom: 12px;">힌트 예문: take _____ of</div>
+            
+            <div class="subjective-input-group">
+                <input type="text" class="input-text" id="subj-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="영단어를 입력하세요" onkeyup="if(event.key==='Enter') checkSubjectiveAnswer()">
+                <button class="tab-btn active" style="flex:0 0 70px;" onclick="checkSubjectiveAnswer()">확인</button>
+            </div>
+            <div class="feedback-msg" id="subj-feedback"></div>
+        </div>
+    </section>
+
+    <script>
+        const rawData = [
+            // 명사 1
+            { title: "advantage", related: "advantageous a. 유리한, 이로운\nedge 우세, 강점", meaning: "유리한 점, 이점", exEn: "take advantage of", exKo: "~을 활용하다" },
+            { title: "appointment", related: "appoint v. 임명하다", meaning: "약속, 임명", exEn: "make an appointment", exKo: "약속을 잡다" },
+            { title: "approval", related: "approve v. 인정하다, 승인하다", meaning: "인정, 승인", exEn: "receive approval", exKo: "승인을 받다" },
+            { title: "assistance", related: "assist v. 돕다\nassistant n. 조수", meaning: "도움, 지원", exEn: "further assistance", exKo: "추가적인 도움" },
+            { title: "authority", related: "authorize v. 인가하다, 권한을 부여하다", meaning: "권한; 당국", exEn: "have the authority to", exKo: "~할 권한이 있다" },
+            { title: "badge", related: "", meaning: "신분증, 배지", exEn: "company identification badge", exKo: "사원증" },
+            { title: "benefit", related: "", meaning: "혜택, 이익; 이익을 주다", exEn: "membership benefits", exKo: "회원 혜택" },
+            { title: "budget", related: "", meaning: "예산", exEn: "budget cuts / a tight budget", exKo: "예산 삭감 / 빠듯한 예산" },
+            { title: "candidate", related: "candidacy n. 출마, 후보(자격)", meaning: "지원자, 후보자", exEn: "qualified candidates", exKo: "자격을 갖춘 지원자들" },
+            { title: "capacity", related: "", meaning: "용량, 수용력, 능력", exEn: "at full capacity", exKo: "완전 가동하여" },
+            { title: "character", related: "characteristic n. 특징\nfigure 인물", meaning: "인물; 성격", exEn: "a fictional character", exKo: "가상의 인물" },
+            { title: "choice", related: "choose v. 선택하다\noption 선택지, 선택권", meaning: "선택(지), 선택권", exEn: "our top choices", exKo: "우리의 최상위 선택" },
+            { title: "compensation", related: "compensate v. 보상하다", meaning: "보상(금)", exEn: "receive compensation for overtime", exKo: "초과 근무에 대해 보상받다" },
+            { title: "concern", related: "concerned a. 걱정하는\nconcerning prep. ~에 관한", meaning: "관심사, 걱정, 근심", exEn: "have concerns about", exKo: "~에 대해 걱정하다" },
+            { title: "consideration", related: "consider v. 고려하다", meaning: "고려, 배려", exEn: "thank you for your consideration.", exKo: "배려해 주셔서 감사합니다." },
+            { title: "contract", related: "", meaning: "계약(서); 계약하다", exEn: "win a contract", exKo: "계약을 따내다[수주하다]" },
+            { title: "contribution", related: "contribute v. 공헌하다, 기여하다", meaning: "기여, 공헌, 기부(금)", exEn: "contribution to the company", exKo: "회사에 대한 기여" },
+            { title: "debate", related: "", meaning: "토론, 논의; 토론하다, 논의하다", exEn: "after lengthy debate", exKo: "긴 논의 후에" },
+            { title: "defect", related: "defective a. 결함 있는\nflaw n. 결함, 결", meaning: "결함, 결점", exEn: "eliminate defects", exKo: "결함을 제거하다" },
+            { title: "demand", related: "", meaning: "요구, 수요; 요구하다", exEn: "demand for organic food", exKo: "유기농 식품에 대한 수요" },
+
+            // 명사 2
+            { title: "description", related: "describe v. 묘사하다", meaning: "묘사, 설명", exEn: "job description", exKo: "직무 내용 기술서" },
+            { title: "development", related: "develop v. 개발하다", meaning: "개발", exEn: "research and development", exKo: "연구 개발(R&D)" },
+            { title: "directions", related: "direct v. 길을 안내하다; 지시하다", meaning: "길 안내; 사용법", exEn: "directions to the branch", exKo: "지사로 가는 길 (안내)" },
+            { title: "distribution", related: "distribute v. 분배하다, 나눠주다", meaning: "유통, 분배, 배부", exEn: "an overseas distribution system", exKo: "해외 유통 시스템" },
+            { title: "district", related: "", meaning: "지역, 지구, 구역", exEn: "the financial district", exKo: "금융 지구" },
+            { title: "enrollment", related: "enroll v. 등록하다\nregistration 등록", meaning: "등록", exEn: "enrollment period", exKo: "등록 기간" },
+            { title: "estimate", related: "estimated a. 추정되는", meaning: "견적(서); 견적을 내다", exEn: "a free estimate", exKo: "무료 견적" },
+            { title: "exhibit", related: "exhibition n. 전시회", meaning: "전시(품); 전시하다", exEn: "a museum exhibit", exKo: "박물관 전시" },
+            { title: "expiration", related: "expire v. 만료되다", meaning: "(기한 등의) 만료, 종료", exEn: "expiration date", exKo: "유효기간" },
+            { title: "forecast", related: "predict 예측하다", meaning: "예상[예측], 예보; 예상[예보]하다", exEn: "economic forecasts", exKo: "경제 전망" },
+            { title: "gain", related: "increase, rise 증가", meaning: "증가, 이득; 얻다", exEn: "financial gains", exKo: "금전적 이득" },
+            { title: "industry", related: "industrial a. 산업의, 공업의\nindustrialize v. 산업화하다", meaning: "산업, 공업", exEn: "work in the food industry", exKo: "음식업계에서 일하다" },
+            { title: "inspection", related: "inspector n. 검사관, 조사관\ninspect v. 점검하다", meaning: "검사, 점검, 검열", exEn: "pass a safety inspection", exKo: "안전 검사를 통과하다" },
+            { title: "instructions", related: "instruct v. 지시하다, 가르치다", meaning: "설명(서), 지시 (사항)", exEn: "follow the instructions", exKo: "설명서를 따르다" },
+            { title: "investment", related: "invest v. 투자하다\ninvestor n. 투자자", meaning: "투자(물)", exEn: "initial investment", exKo: "초기 투자" },
+            { title: "maintenance", related: "maintain v. 유지하다", meaning: "유지보수, 관리", exEn: "routine maintenance", exKo: "정기 점검" },
+            { title: "malfunction", related: "function 기능; (제대로) 작동하다", meaning: "오작동; 오작동하다", exEn: "computer malfunction", exKo: "컴퓨터 오작동" },
+            { title: "measure", related: "measurement n. 측정; 치수", meaning: "조치, 정책; 측정하다", exEn: "effective measures", exKo: "효과적인 조치" },
+            { title: "negotiation", related: "negotiate v. 협상하다", meaning: "협상, 협의", exEn: "contract negotiation", exKo: "계약 협상" },
+            { title: "objection", related: "object v. 반대하다", meaning: "반대, 이의", exEn: "the main objection to the plan", exKo: "계획에 반대하는 주된 이유" },
+
+            // 명사 3
+            { title: "operation", related: "operator n. 기사, 운영자", meaning: "작동, 작업", exEn: "joint operation", exKo: "공동 작업" },
+            { title: "option", related: "opt v. 선택하다", meaning: "선택(권), 옵션", exEn: "a wide range of options", exKo: "폭넓은 선택권" },
+            { title: "participation", related: "participate v. 참여[참가]하다\nparticipant n. 참가자", meaning: "참여, 참가", exEn: "participation in the survey", exKo: "설문 조사 참여" },
+            { title: "preference", related: "prefer v. 선호하다\npreferably ad. 되도록이면", meaning: "선호, 우선권", exEn: "food preference", exKo: "음식 선호도" },
+            { title: "presence", related: "present a. 있는, 존재하는", meaning: "존재(감)", exEn: "international presence", exKo: "국제적 영향력" },
+            { title: "priority", related: "prior to prep. ~전에", meaning: "우선 사항, 우선 순위", exEn: "top priority", exKo: "최우선 사항" },
+            { title: "promotion", related: "promote v. 승진시키다, 홍보하다\npromotional a. 홍보용의", meaning: "승진, 홍보, 촉진", exEn: "promotion to sales manager", exKo: "영업 부장으로의 승진" },
+            { title: "proposal", related: "propose v. 제안하다", meaning: "제안, 기획안", exEn: "business proposal", exKo: "사업 제안" },
+            { title: "purchase", related: "purchaser n. 구입자, 구매자", meaning: "구입(품), 구매; 구입하다, 구매하다", exEn: "all cosmetic purchases", exKo: "모든 화장품 구매" },
+            { title: "questionnaire", related: "survey 설문지", meaning: "설문지, 질문지", exEn: "fill out a questionnaire", exKo: "설문지를 작성하다" },
+            { title: "regulation", related: "regulate v. 규제하다\nrule 규칙", meaning: "규정, 규칙", exEn: "safety regulations", exKo: "안전 규칙" },
+            { title: "replacement", related: "replace v. 대신하다, 대체하다", meaning: "교체(품), 후임자", exEn: "replacement parts", exKo: "교체 부품" },
+            { title: "reputation", related: "renown, fame 명성", meaning: "명성, 평판", exEn: "build a reputation", exKo: "명성을 쌓다" },
+            { title: "requirement", related: "require v. 요구하다, 필요로 하다", meaning: "필요 조건", exEn: "meet the requirements", exKo: "필요 조건을 충족시키다" },
+            { title: "reservation", related: "reserve v. 예약하다", meaning: "예약", exEn: "make a reservation", exKo: "예약하다" },
+            { title: "responsibility", related: "responsible a. 책임이 있는", meaning: "책임(감), 책무", exEn: "primary responsibilities", exKo: "주요 책무" },
+            { title: "solution", related: "solve v. 해결하다\nanswer 해답", meaning: "해결책", exEn: "find a solution", exKo: "해결책을 찾다" },
+            { title: "strategy", related: "strategic a. 전략적인\nplan 계획", meaning: "전략, 계획", exEn: "marketing strategy", exKo: "마케팅 전략" },
+            { title: "submission", related: "submit v. 제출하다", meaning: "제출, 제출물", exEn: "review the submissions", exKo: "제출물을 검토하다" },
+            { title: "warehouse", related: "storage 저장고", meaning: "창고", exEn: "warehouse logistics", exKo: "창고 물류" },
+
+            // 형용사 1
+            { title: "accountable", related: "responsible 책임이 있는", meaning: "책임이 있는", exEn: "be accountable for", exKo: "~에 대한 책임이 있다" },
+            { title: "additional", related: "add v. 추가하다\naddition n. 추가(물)", meaning: "추가적인", exEn: "additional workers", exKo: "추가 직원들" },
+            { title: "advanced", related: "advance v. 진보시키다, 전진하다", meaning: "고급의, 진보된", exEn: "advanced degree", exKo: "고급 학위" },
+            { title: "agreeable", related: "agree v. 동의하다", meaning: "동의하는, (사람이) 성격이 좋은", exEn: "be agreeable to the changes", exKo: "변경 사항에 동의하다" },
+            { title: "alternative", related: "alternatively ad. 그렇지 않으면\nalternate v. 번갈아 하다", meaning: "대안의; 대안", exEn: "alternative energy", exKo: "대체 에너지" },
+            { title: "appropriate", related: "appropriately ad. 적절하게", meaning: "적절한", exEn: "wear appropriate gear", exKo: "적절한 장비를 착용하다" },
+            { title: "available", related: "availability n. 이용할 수 있음", meaning: "이용 가능한", exEn: "available for rental", exKo: "임대 가능한" },
+            { title: "aware", related: "awareness n. 인식\nunaware 알지 못하는", meaning: "알고 있는", exEn: "be aware of customer needs", exKo: "고객의 욕구를 알다" },
+            { title: "captivating", related: "captivate v. (마음을) 사로잡다", meaning: "매력적인", exEn: "a captivating performance", exKo: "매력적인 공연" },
+            { title: "competitive", related: "compete v. 경쟁하다\ncompetition n. 경쟁", meaning: "경쟁적인, 경쟁력 있는", exEn: "competitive prices", exKo: "경쟁력 있는 가격" },
+            { title: "complimentary", related: "compliment v. 칭찬(하다)", meaning: "무료의, 칭찬의", exEn: "complimentary tickets", exKo: "무료 티켓" },
+            { title: "confidential", related: "confidentiality n. 기밀성", meaning: "기밀의, 비밀의", exEn: "confidential information", exKo: "기밀 정보" },
+            { title: "considerable", related: "significant 상당한, 중요한", meaning: "상당한, 많은", exEn: "a considerable amount", exKo: "상당한 양" },
+            { title: "creative", related: "creativity n. 창의성\ninnovative 혁신적인", meaning: "창의적인", exEn: "the most creative proposal", exKo: "가장 창의적인 제안" },
+            { title: "critical", related: "criticize v. 비판하다", meaning: "비평의; 비판적인; 중대한", exEn: "receive critical acclaim", exKo: "호평을 받다" },
+            { title: "dedicated", related: "dedication n. 헌신, 공헌", meaning: "헌신적인, 전념하는", exEn: "dedicated employees", exKo: "헌신적인 직원들" },
+            { title: "dependent", related: "depend v. 의존하다\nindependent 독립된, 독립적인", meaning: "의존하는", exEn: "be dependent upon", exKo: "~에 의존하다" },
+            { title: "detailed", related: "details n. 세부사항", meaning: "세부적인, 자세한", exEn: "detailed information", exKo: "자세한 정보" },
+            { title: "eligible", related: "entitled, qualified 자격이 있는", meaning: "자격이 있는, 적임의", exEn: "be eligible for promotion", exKo: "승진할 자격이 있다" },
+            { title: "entire", related: "entirely ad. 전적으로\nwhole 전체의, 완전한", meaning: "전체의", exEn: "the entire department", exKo: "부서 전체" },
+
+            // 형용사 2
+            { title: "exciting", related: "thrilling 신나는", meaning: "흥미진진한, 신나는", exEn: "an exciting opportunity", exKo: "흥미로운 기회" },
+            { title: "extensive", related: "extend v. 연장하다, 늘리다\nextension n. 연장; 내선 전화", meaning: "광범위한", exEn: "extensive experience", exKo: "광범위한 경험" },
+            { title: "flexible", related: "", meaning: "유연한, 융통성 있는", exEn: "flexible schedule", exKo: "유연한 일정" },
+            { title: "genuine", related: "sincere 진정한\nauthentic 진짜의", meaning: "진실된, 진짜의", exEn: "genuine interest", exKo: "진정한 관심" },
+            { title: "impressive", related: "impress v. 깊은 인상을 주다", meaning: "인상적인, 뛰어난", exEn: "impressive track record", exKo: "뛰어난 실적[경력]" },
+            { title: "innovative", related: "innovate v. 혁신하다\ninnovation n. 혁신", meaning: "혁신적인", exEn: "an innovative product", exKo: "혁신적인 제품" },
+            { title: "local", related: "", meaning: "그 지역의, 현지의; 현수인", exEn: "local residents and businesses", exKo: "지역 주민들과 기업" },
+            { title: "permanent", related: "lasting 영속적인", meaning: "영구적인", exEn: "permanent residence", exKo: "영구 거주지" },
+            { title: "personal", related: "confidential 비밀[기밀]의", meaning: "개인의, 사적인", exEn: "personal information", exKo: "개인 정보" },
+            { title: "potential", related: "potentially ad. 잠재적으로", meaning: "잠재적인; 잠재력", exEn: "potential customers", exKo: "잠재 고객들" },
+            { title: "punctual", related: "punctually ad. 시간대로, 엄수하여", meaning: "시간을 지키는[엄수하는]", exEn: "a punctual start at 9 o'clock", exKo: "9시에 정확히 맞춘 시작" },
+            { title: "qualified", related: "eligible 자격이 있는\ncompetent 능숙한", meaning: "자격이 있는, 능력이 있는", exEn: "qualified candidates", exKo: "자격을 갖춘 지원자" },
+            { title: "reliable", related: "rely v. 믿다, 의지하다", meaning: "믿을 만한, 신뢰할 수 있는", exEn: "reliable transportation", exKo: "믿을 만한 교통 수단" },
+            { title: "remaining", related: "remain v. 남다", meaning: "남은", exEn: "remaining time", exKo: "남은 시간" },
+            { title: "significant", related: "significantly ad. 상당하게", meaning: "중요한, 상당한", exEn: "significant changes", exKo: "상당한 변화" },
+            { title: "stable", related: "stability n. 안정(감)", meaning: "안정된, 안정적인", exEn: "stable prices", exKo: "안정적인 물가" },
+            { title: "substantial", related: "considerable 상당한", meaning: "상당한, 실질적인", exEn: "a substantial increase in sales", exKo: "판매에서의 상당한 증가" },
+            { title: "supplemental", related: "supplement n. 보충(물)", meaning: "추가적인", exEn: "supplemental materials", exKo: "보충 자료" },
+            { title: "thorough", related: "thoroughly ad. 철저하게", meaning: "철저한", exEn: "thorough inspection", exKo: "철저한 검사" },
+            { title: "valid", related: "effective 유효한\ninvalid 유효하지 않은", meaning: "유효한", exEn: "valid form of ID", exKo: "유효한 신분증" }
+        ];
+
+        let activeData = [...rawData];
+        let currentTab = 'study';
+        
+        let cardIdx = 0;
+        let mcqIdx = 0;
+        let mcqScore = 0;
+        let subjIdx = 0;
+        let subjScore = 0;
+
+        // 피셔-예이츠(Fisher-Yates) 완전 무작위 셔플 함수
+        function shuffleArray(array) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        function switchTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+
+            if(tab === 'study') {
+                document.querySelectorAll('.tab-btn')[0].classList.add('active');
+                document.getElementById('sec-study').classList.add('active');
+                renderCard();
+            } else if(tab === 'mcq') {
+                document.querySelectorAll('.tab-btn')[1].classList.add('active');
+                document.getElementById('sec-mcq').classList.add('active');
+                resetMcq();
+            } else if(tab === 'subjective') {
+                document.querySelectorAll('.tab-btn')[2].classList.add('active');
+                document.getElementById('sec-subjective').classList.add('active');
+                resetSubjective();
+            }
+        }
+
+        function shuffleCurrentData() {
+            activeData = shuffleArray(activeData);
+            if(currentTab === 'study') {
+                cardIdx = 0;
+                renderCard();
+            } else if(currentTab === 'mcq') {
+                resetMcq();
+            } else if(currentTab === 'subjective') {
+                resetSubjective();
+            }
+        }
+
+        /* 1. 카드 학습 */
+        function toggleCardFlip() {
+            document.getElementById('flipCard').classList.toggle('flipped');
+        }
+
+        function renderCard() {
+            const card = activeData[cardIdx];
+            document.getElementById('flipCard').classList.remove('flipped');
+            
+            setTimeout(() => {
+                document.getElementById('card-en').innerText = card.title;
+                document.getElementById('card-rel').innerText = card.related;
+                document.getElementById('card-ko').innerText = card.meaning;
+                document.getElementById('card-ex-en').innerText = card.exEn;
+                document.getElementById('card-ex-ko').innerText = card.exKo;
+                document.getElementById('card-progress').innerText = `${cardIdx + 1} / ${activeData.length}`;
+            }, 120);
+        }
+
+        function moveCard(dir) {
+            cardIdx += dir;
+            if(cardIdx < 0) cardIdx = activeData.length - 1;
+            if(cardIdx >= activeData.length) cardIdx = 0;
+            renderCard();
+        }
+
+        /* 2. 객관식 퀴즈 (완전 무작위 선택지 배치 적용) */
+        function resetMcq() {
+            mcqIdx = 0;
+            mcqScore = 0;
+            renderMcq();
+        }
+
+        function renderMcq() {
+            if(mcqIdx >= activeData.length) {
+                document.getElementById('mcq-box').innerHTML = `
+                    <div class="score-board">
+                        <h2>🎉 객관식 테스트 완료!</h2>
+                        <div class="score-num">${mcqScore} / ${activeData.length}</div>
+                        <button class="tab-btn active" style="margin-top:15px; width: auto; padding: 10px 24px;" onclick="resetMcq()">다시 풀기</button>
+                    </div>`;
+                return;
+            }
+
+            const current = activeData[mcqIdx];
+            document.getElementById('mcq-progress').innerText = `${mcqIdx + 1} / ${activeData.length}`;
+            document.getElementById('mcq-question').innerText = current.title;
+
+            // 1) 현재 단어 제외 오답 후보 추출 및 셔플
+            const otherItems = activeData.filter(item => item.title !== current.title);
+            const shuffledDistractors = shuffleArray(otherItems);
+            
+            // 2) 오답 3개 무작위 선택
+            const distractors = shuffledDistractors.slice(0, 3).map(item => item.meaning);
+
+            // 3) 정답 1개 + 오답 3개 합친 후 '완전 무작위'로 위치 섞기
+            const options = shuffleArray([current.meaning, ...distractors]);
+
+            const optionsContainer = document.getElementById('mcq-options');
+            optionsContainer.innerHTML = '';
+
+            options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerText = opt;
+                btn.onclick = () => checkMcqAnswer(btn, opt === current.meaning);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function checkMcqAnswer(selectedBtn, isCorrect) {
+            const allBtns = document.querySelectorAll('#mcq-options .option-btn');
+            allBtns.forEach(btn => btn.disabled = true);
+
+            if(isCorrect) {
+                selectedBtn.classList.add('correct');
+                mcqScore++;
+            } else {
+                selectedBtn.classList.add('wrong');
+            }
+
+            setTimeout(() => {
+                mcqIdx++;
+                renderMcq();
+            }, 700);
+        }
+
+        /* 3. 주관식 테스트 */
+        function resetSubjective() {
+            subjIdx = 0;
+            subjScore = 0;
+            renderSubjective();
+        }
+
+        function renderSubjective() {
+            if(subjIdx >= activeData.length) {
+                document.getElementById('subj-box').innerHTML = `
+                    <div class="score-board">
+                        <h2>🎉 주관식 테스트 완료!</h2>
+                        <div class="score-num">${subjScore} / ${activeData.length}</div>
+                        <button class="tab-btn active" style="margin-top:15px; width: auto; padding: 10px 24px;" onclick="resetSubjective()">다시 풀기</button>
+                    </div>`;
+                return;
+            }
+
+            const current = activeData[subjIdx];
+            document.getElementById('subj-progress').innerText = `${subjIdx + 1} / ${activeData.length}`;
+            document.getElementById('subj-question').innerText = current.meaning;
+            
+            let maskedEx = current.exEn.replace(new RegExp(current.title, 'gi'), '_____');
+            document.getElementById('subj-hint').innerText = `예문 힌트: ${maskedEx} (${current.exKo})`;
+            
+            const inputEl = document.getElementById('subj-input');
+            inputEl.value = '';
+            inputEl.disabled = false;
+            document.getElementById('subj-feedback').innerText = '';
+        }
+
+        function checkSubjectiveAnswer() {
+            const inputEl = document.getElementById('subj-input');
+            const userAns = inputEl.value.trim().toLowerCase();
+            const targetWord = activeData[subjIdx].title.toLowerCase();
+            const feedback = document.getElementById('subj-feedback');
+
+            if(!userAns) return;
+
+            inputEl.disabled = true;
+
+            if(userAns === targetWord) {
+                feedback.style.color = 'var(--correct)';
+                feedback.innerText = '⭕ 정답입니다!';
+                subjScore++;
+            } else {
+                feedback.style.color = 'var(--wrong)';
+                feedback.innerText = `❌ 오답! 정답: ${activeData[subjIdx].title}`;
+            }
+
+            setTimeout(() => {
+                subjIdx++;
+                renderSubjective();
+            }, 1000);
+        }
+
+        renderCard();
+    </script>
+</body>
+</html>
